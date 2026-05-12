@@ -1,25 +1,19 @@
 import { Member } from '../models/Member.js';
-import { MemberCard } from './MemberCard.js';
+import { createMemberCard } from './MemberCard.js';
 
-interface MemberListOptions {
-  onSelect: (id: number) => void;
-}
+function createMemberList(
+  members: { member: Member; photoUrl?: string }[],
+  onSelect: (id: number) => void
+): HTMLElement {
+  const grid = document.createElement('div');
+  grid.className = 'member-grid';
 
-export class MemberList {
-  constructor(
-    private members: { member: Member; photoUrl?: string }[],
-    private options: MemberListOptions,
-  ) {}
-
-  render(): HTMLElement {
-    const grid = document.createElement('div');
-    grid.className = 'member-grid';
-
-    for (const item of this.members) {
-      const card = new MemberCard(item.member, item.photoUrl, this.options.onSelect);
-      grid.appendChild(card.render());
-    }
-
-    return grid;
+  for (const item of members) {
+    const card = createMemberCard(item.member, item.photoUrl, onSelect);
+    grid.appendChild(card);
   }
+
+  return grid;
 }
+
+export { createMemberList };

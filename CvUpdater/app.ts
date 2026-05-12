@@ -1,25 +1,19 @@
-import { DatabaseService } from './services/DatabaseService.js';
-import { MemberService } from './services/MemberService.js';
-import { Header } from './components/Header.js';
-import { MemberList } from './components/MemberList.js';
-import { CvViewer } from './components/CvViewer.js';
-import { CvEditor } from './components/CvEditor.js';
+import * as DB from './services/DatabaseService.js';
+import * as MemberService from './services/MemberService.js';
+import { createHeader } from './components/Header.js';
+import { createMemberList } from './components/MemberList.js';
+import { createCvViewer } from './components/CvViewer.js';
+import { createCvEditor } from './components/CvEditor.js';
 
 type View = 'list' | 'detail' | 'edit';
 
-const db = new DatabaseService();
-const memberService = new MemberService(db);
-
-const app = document.getElementById('app')!;
-const header = new Header();
-
+const appRoot = document.getElementById('app')!;
 let currentView: View = 'list';
 let currentMemberId: number | null = null;
 
 function render(): void {
-  app.innerHTML = '';
-
-  app.appendChild(header.render());
+  appRoot.innerHTML = '';
+  appRoot.appendChild(createHeader());
 
   switch (currentView) {
     case 'list':
@@ -35,60 +29,51 @@ function render(): void {
 }
 
 async function renderList(): Promise<void> {
-  const members = await memberService.getAll();
-  const list = new MemberList(members, {
-    onSelect: (id) => {
-      currentMemberId = id;
-      currentView = 'detail';
-      render();
-    },
+  const members = await MemberService.getAll();
+  const list = createMemberList(members, (id) => {
+    currentMemberId = id;
+    currentView = 'detail';
+    render();
   });
-  app.appendChild(list.render());
+  appRoot.appendChild(list);
 }
 
 async function renderDetail(id: number): Promise<void> {
-  const result = await memberService.getWithMedia(id);
+  const result = await MemberService.getWithMedia(id);
   if (!result) {
     currentView = 'list';
     render();
     return;
   }
-  const viewer = new CvViewer(result, {
-    onBack: () => {
-      currentView = 'list';
-      render();
-    },
-    onEdit: () => {
-      currentView = 'edit';
-      render();
-    },
-  });
-  app.appendChild(viewer.render());
+  const viewer = createCvViewer(
+    result,
+    () => { currentView = 'list'; render(); },
+    () => { currentView = 'edit'; render(); }
+  );
+  appRoot.appendChild(viewer);
 }
 
 async function renderEdit(id: number): Promise<void> {
-  const member = await memberService.getById(id);
+  const member = await MemberService.getById(id);
   if (!member) {
     currentView = 'list';
     render();
     return;
   }
-  const editor = new CvEditor(member, {
-    onSave: async (data) => {
-      await memberService.update(data);
+  const editor = createCvEditor(
+    member,
+    async (data) => {
+      await MemberService.update(data);
       currentView = 'detail';
       render();
     },
-    onCancel: () => {
-      currentView = 'detail';
-      render();
-    },
-  });
-  app.appendChild(editor.render());
+    () => { currentView = 'detail'; render(); }
+  );
+  appRoot.appendChild(editor);
 }
 
 async function init(): Promise<void> {
-  await db.open();
+  await DB.open();
   render();
 }
 
