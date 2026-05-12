@@ -22,12 +22,13 @@ function getById(id: number): Promise<Member | undefined> {
 
 function getWithMedia(
   id: number
-): Promise<{ member: Member; photoUrl?: string; videoUrl?: string } | undefined> {
+): Promise<{ member: Member; photoUrl?: string; videoUrl?: string; audioUrl?: string } | undefined> {
   return DB.getMember(id).then(async (member) => {
     if (!member) return undefined;
 
     let photoUrl: string | undefined;
     let videoUrl: string | undefined;
+    let audioUrl: string | undefined;
 
     if (member.photo_path) {
       const blob = await DB.getMedia(parseInt(member.photo_path));
@@ -39,7 +40,12 @@ function getWithMedia(
       if (blob) videoUrl = URL.createObjectURL(blob);
     }
 
-    return { member, photoUrl, videoUrl };
+    if (member.audio_path) {
+      const blob = await DB.getMedia(parseInt(member.audio_path));
+      if (blob) audioUrl = URL.createObjectURL(blob);
+    }
+
+    return { member, photoUrl, videoUrl, audioUrl };
   });
 }
 

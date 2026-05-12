@@ -9,10 +9,12 @@ function createBioVideoSection(
 
   const info = document.createElement('div');
   info.className = 'cv-info';
+  const roles = member.role.split(',').map(r => r.trim()).filter(Boolean);
+
   info.innerHTML = `
     <h2>${member.nom}</h2>
-    <p class="role">${member.role}</p>
-    <p>${member.bio}</p>
+    <div class="cv-roles">${roles.map(r => `<span class="role-tag">${r}</span>`).join('')}</div>
+    <div class="cv-bio">${member.bio}</div>
     <h3>Compétences</h3>
     <ul>${member.competences.map(c => `<li>${c}</li>`).join('')}</ul>
     <h3>Contact</h3>

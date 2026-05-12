@@ -1,7 +1,8 @@
 import { Member, MediaEntry } from '../models/Member.js';
+import { seedMembers } from '../data/seed.js';
 
 const DB_NAME = 'CvUpdaterDB';
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 
 let db: IDBDatabase | null = null;
 
@@ -16,6 +17,10 @@ function open(): Promise<IDBDatabase> {
 
     request.onupgradeneeded = (event) => {
       const database = (event.target as IDBOpenDBRequest).result;
+
+      while (database.objectStoreNames.length > 0) {
+        database.deleteObjectStore(database.objectStoreNames[0]);
+      }
 
       const memberStore = database.createObjectStore('members', {
         keyPath: 'id',
@@ -101,6 +106,35 @@ function deleteMember(id: number): Promise<void> {
   });
 }
 
+function getMemberCount(): Promise<number> {
+  return ensureOpen().then((database) => {
+    return new Promise((resolve, reject) => {
+      const tx = database.transaction('members', 'readonly');
+      const store = tx.objectStore('members');
+      const request = store.count();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  });
+}
+
+function seedIfEmpty(): Promise<void> {
+  return getMemberCount().then((count) => {
+    if (count > 0) return;
+    return ensureOpen().then((database) => {
+      return new Promise((resolve, reject) => {
+        const tx = database.transaction('members', 'readwrite');
+        const store = tx.objectStore('members');
+        for (const member of seedMembers) {
+          store.add(member);
+        }
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    });
+  });
+}
+
 function saveMedia(file: File): Promise<number> {
   return ensureOpen().then((database) => {
     return new Promise((resolve, reject) => {
@@ -139,6 +173,8 @@ export {
   getMember,
   updateMember,
   deleteMember,
+  getMemberCount,
+  seedIfEmpty,
   saveMedia,
   getMedia,
 };

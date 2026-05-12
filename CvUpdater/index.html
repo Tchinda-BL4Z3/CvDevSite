@@ -7,7 +7,15 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="hero-root"></div>
+  <div id="app"><p class="loading-msg">Chargement...</p></div>
+  <div id="footer-root"></div>
   <script type="module" src="app.js"></script>
+  <script>
+    window.onerror = function(msg, url, line) {
+      document.getElementById('app').innerHTML =
+        '<p style="color:red;padding:2rem;">Erreur: ' + msg + ' (ligne ' + line + ')</p>';
+    };
+  </script>
 </body>
 </html>

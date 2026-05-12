@@ -5,6 +5,24 @@ function createMemberList(
   members: { member: Member; photoUrl?: string }[],
   onSelect: (id: number) => void
 ): HTMLElement {
+  const container = document.createElement('div');
+
+  const sectionHeader = document.createElement('div');
+  sectionHeader.className = 'section-header';
+  sectionHeader.innerHTML = `
+    <h2>Membres <span>· ${members.length} personne${members.length > 1 ? 's' : ''}</span></h2>
+    <span class="count">${members.length} membre${members.length > 1 ? 's' : ''}</span>
+  `;
+  container.appendChild(sectionHeader);
+
+  if (members.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = '<p>Aucun membre pour le moment.</p>';
+    container.appendChild(empty);
+    return container;
+  }
+
   const grid = document.createElement('div');
   grid.className = 'member-grid';
 
@@ -13,7 +31,8 @@ function createMemberList(
     grid.appendChild(card);
   }
 
-  return grid;
+  container.appendChild(grid);
+  return container;
 }
 
 export { createMemberList };
